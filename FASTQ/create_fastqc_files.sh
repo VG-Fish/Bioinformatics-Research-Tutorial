@@ -26,10 +26,9 @@ fi
 # -p causes mkdir to not error and create parents if needed
 mkdir -p "$output_dir"
 
-# ::: is shell globbing
 for file in "$input_dir"/*.fastq; do
   printf "%s|%s\n" "$output_dir" "$file"
-done | parallel --progress -j 4 '
+done | parallel --bar -j 4 '
   IFS="|" read -r output_dir input_file <<< {}
   fastqc -o "$output_dir" "$input_file"
 '
