@@ -19,7 +19,9 @@ process_file() {
   trap 'rm -rf "${temp_job_dir}"' EXIT ERR INT
 
   # Quoting variables can prevent unexpected word-splitting errors
-  fasterq-dump "$val" --split-files --threads 4 -t "$temp_job_dir" -o "$save_file"
+  fasterq-dump "$val" --split-files --threads 4 -t "$temp_job_dir" -o "$save_file" --mem 500MB
+
+  purge
 }
 export -f process_file
 
