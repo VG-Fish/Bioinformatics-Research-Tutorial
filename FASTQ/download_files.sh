@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# This script requires GNU parallel to be installed
+# This script requires GNU parallel (https://www.gnu.org/software/parallel/) to be installed
 input_prefix="SRR"
 declare -A experiment_groups=(
   [Experiment1]="$(printf '%s ' ${input_prefix}{11841493..11841495})"
