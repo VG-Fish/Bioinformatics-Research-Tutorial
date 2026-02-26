@@ -6,3 +6,6 @@
 md5sum.txt
 *.sam
 *.bam
+*.bai
+*.txt
+*.summary
