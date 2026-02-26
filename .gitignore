@@ -2,3 +2,5 @@
 *.fastq
 *.html
 *.zip
+*.tar.gz
+md5sum.txt
