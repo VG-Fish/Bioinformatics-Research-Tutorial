@@ -5,8 +5,8 @@ input_prefix="SRR"
 declare -A experiment_groups=(
   [Experiment1]="$(printf '%s ' ${input_prefix}{11841493..11841495})"
   [Experiment2]="$(printf '%s ' ${input_prefix}{11841490..11841492})"
-  [Experiment3]="$(printf '%s ' ${input_prefix}{11841487..11841489})"
-  [Experiment4]="$(printf '%s ' ${input_prefix}{11841484..11841486})"
+  # [Experiment3]="$(printf '%s ' ${input_prefix}{11841487..11841489})"
+  # [Experiment4]="$(printf '%s ' ${input_prefix}{11841484..11841486})"
 )
 
 process_file() {
@@ -18,10 +18,15 @@ process_file() {
   temp_job_dir=$(mktemp -d -t fasterq_temp_XXXXXX)
   trap 'rm -rf "${temp_job_dir}"' EXIT ERR INT
 
-  # Quoting variables can prevent unexpected word-splitting errors
-  fasterq-dump "$val" --split-files --threads 2 -t "$temp_job_dir" -o "$save_file" --mem 500MB
+  printf "1. Prefetching %s...\n" "$val"
+  prefetch "$val" -O "$temp_job_dir"
 
-  purge
+  # Quoting variables can prevent unexpected word-splitting errors
+  printf "2. Extracting %s to %s...\n" "$val" "$save_file"
+  fasterq-dump "${temp_job_dir}/${val}/${val}.sra" \
+    --split-files -x \
+    --threads 2 --mem 500MB \
+    -t "$temp_job_dir" -o "$save_file"
 }
 export -f process_file
 
