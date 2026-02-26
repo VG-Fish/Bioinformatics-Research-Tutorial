@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # This script requires GNU parallel (https://www.gnu.org/software/parallel/) to be installed
+# Got SRR ids from: https://www.ncbi.nlm.nih.gov/sra/?term=SRP263458
 input_prefix="SRR"
 declare -A experiment_groups=(
   [Experiment1]="$(printf '%s ' ${input_prefix}{11841493..11841494})"
