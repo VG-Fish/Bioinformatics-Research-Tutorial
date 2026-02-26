@@ -3,8 +3,8 @@
 # This script requires GNU parallel (https://www.gnu.org/software/parallel/) to be installed
 input_prefix="SRR"
 declare -A experiment_groups=(
-  [Experiment1]="$(printf '%s ' ${input_prefix}{11841493..11841495})"
-  [Experiment2]="$(printf '%s ' ${input_prefix}{11841490..11841492})"
+  [Experiment1]="$(printf '%s ' ${input_prefix}{11841493..11841494})"
+  [Experiment2]="$(printf '%s ' ${input_prefix}{11841490..11841491})"
   # [Experiment3]="$(printf '%s ' ${input_prefix}{11841487..11841489})"
   # [Experiment4]="$(printf '%s ' ${input_prefix}{11841484..11841486})"
 )
