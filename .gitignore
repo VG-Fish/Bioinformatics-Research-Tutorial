@@ -2,10 +2,11 @@
 *.fastq
 *.html
 *.zip
-*.tar.gz
+*.gz
 md5sum.txt
 *.sam
 *.bam
 *.bai
 *.txt
 *.summary
+Mock_Project/
