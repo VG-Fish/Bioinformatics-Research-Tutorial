@@ -55,7 +55,8 @@ run_hisat_and_samtools() {
   samtools index "$output_sorted_bam_file"
 
   featureCounts \
-    -p -F GTF -t CDS -g locus_tag \
+    -p --countReadPairs \
+    -F GTF -t exon -g gene_id \
     -a "$feature_genome_file" \
     -o "$output_dir/Sample${sample_count}_counts.txt" \
     "$output_sorted_bam_file"
@@ -69,4 +70,4 @@ for file in "$input_dir"/*_R1.paired.fastq; do
   R2="${file%_R1.paired.fastq}_R2.paired.fastq"
   printf "%s|%s|%s\n" "$R1" "$R2" "$sample_count"
   sample_count=$((sample_count+1))
-done | parallel --progress -j 2 run_hisat_and_samtools {}
+done | parallel --compress --progress -j 2 run_hisat_and_samtools {}

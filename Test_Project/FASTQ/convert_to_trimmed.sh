@@ -34,6 +34,8 @@ export output_dir
 
 # Fix script to be more flexible in choosing an adapter
 cd "$input_dir"
+echo "In directory: $input_dir"
+
 # sed is a stream editor, in this command, the format is s/old/new/, meaning substitute old with new.
 ls *_1.fastq \
   | sed 's/_1\.fastq$//' \
@@ -48,6 +50,4 @@ ls *_1.fastq \
         "$output_dir/${BASE}_R2.unpaired.fastq" \
         ILLUMINACLIP:TruSeq3-PE.fa:2:30:10 \
         LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36
-      
-      rm -rf "{1}_1.fastq" "{1}_2.fastq"
   '
