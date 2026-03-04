@@ -9,4 +9,5 @@ md5sum.txt
 *.bai
 *.txt
 *.summary
-Mock_Project/
+Genome/
+Genome_Info/
