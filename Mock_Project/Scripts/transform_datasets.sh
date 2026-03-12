@@ -35,9 +35,9 @@ export output_dir
 mkdir -p "$output_dir"
 
 run_hisat_and_samtools() {
-  IFS="|" read -r R1 R2 sample_count <<< "$1"
+  IFS="|" read -r R1 R2 sample_count type <<< "$1"
 
-  output_sam_file="${output_dir}/Sample${sample_count}_aligned.sam"
+  output_sam_file="${output_dir}/${type}_Sample${sample_count}_aligned.sam"
   output_bam_file="${output_sam_file%.sam}.bam"
   output_sorted_bam_file="${output_bam_file%_aligned.bam}_sorted_aligned.bam"
 
@@ -54,13 +54,14 @@ run_hisat_and_samtools() {
 
   samtools index "$output_sorted_bam_file"
 
+  echo "\n\n\nRunning featureCounts: $output_sorted_bam_file...\n"
+
   featureCounts \
     -p --countReadPairs \
-    -F GTF -t exon -g gene_id \
     -a "$feature_genome_file" \
-    -o "$output_dir/Sample${sample_count}_counts.txt" \
+    -o "$output_dir/${type}_Sample${sample_count}_counts.txt" \
     "$output_sorted_bam_file"
-  rm -rf "$output_sorted_bam_file"
+  # rm -rf "$output_sorted_bam_file"
 }
 export -f run_hisat_and_samtools
 
@@ -68,6 +69,19 @@ sample_count=1
 for file in "$input_dir"/*_R1.paired.fastq; do
   R1="$file"
   R2="${file%_R1.paired.fastq}_R2.paired.fastq"
-  printf "%s|%s|%s\n" "$R1" "$R2" "$sample_count"
+
+  test="ACOD"
+  control="WTBM"
+  type=""
+
+  if [[ "$R1" == *"$test"* ]]; then
+    type="$test"
+  elif [[ "$R1" == *"$control"* ]]; then
+    type="$control"
+  else
+    type="UNKNOWN"
+  fi
+
+  printf "%s|%s|%s|%s\n" "$R1" "$R2" "$sample_count" "$type"
   sample_count=$((sample_count+1))
-done | parallel --compress --progress -j 2 run_hisat_and_samtools {}
+done | parallel --compress --progress -j 6 run_hisat_and_samtools {}
