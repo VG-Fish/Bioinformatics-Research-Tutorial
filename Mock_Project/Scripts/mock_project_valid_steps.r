@@ -30,17 +30,17 @@ library(ggplot2)
 library(ggrepel)
 
 # Go to core directory
-core_directory <- "/Users/vishy/Documents/Bioinformatics Research/Mock_Project"
+core_directory <- "/Volumes/X9 Pro/Programming Projects/Bioinformatics Research/Mock_Project"
 setwd(core_directory)
 
 # Create and clean processed data directory
-data_directory <- "Processed Data/"
+data_directory <- "Processed Data SE/"
 dir.exists(data_directory) || dir.create(data_directory)
 files <- list.files(data_directory, full.names = TRUE)
 unlink(files, recursive = TRUE)
 
 # Read gene counts
-Counts <- read.delim("HISAT/gene_counts.csv", header=TRUE, row.names = 1, sep = ',')
+Counts <- read.delim("HISAT2/all_gene_counts_SE.csv", header=TRUE, row.names = 1, sep = ',')
 Counts <- Counts[which(rowSums(Counts) > 50), ]
 
 # Create core variables for downstream analysis

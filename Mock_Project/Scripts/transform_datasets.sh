@@ -57,7 +57,7 @@ run_hisat_and_samtools() {
   echo "\n\n\nRunning featureCounts: $output_sorted_bam_file...\n"
 
   featureCounts \
-    -p --countReadPairs \
+    -p \
     -a "$feature_genome_file" \
     -o "$output_dir/${type}_Sample${sample_count}_counts.txt" \
     "$output_sorted_bam_file"
@@ -84,4 +84,4 @@ for file in "$input_dir"/*_R1.paired.fastq; do
 
   printf "%s|%s|%s|%s\n" "$R1" "$R2" "$sample_count" "$type"
   sample_count=$((sample_count+1))
-done | parallel --compress --progress -j 6 run_hisat_and_samtools {}
+done | parallel --compress --progress -j 4 run_hisat_and_samtools {}
