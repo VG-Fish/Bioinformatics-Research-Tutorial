@@ -7,7 +7,7 @@ from joblib import load
 loaded_model = load("trial2/output/phosphomannan_logreg.joblib")
 
 embedding_df: pl.DataFrame = pl.read_parquet(
-    "C_auris_embeddings_info.parquet",
+    "trial2/C_auris_embeddings_info.parquet",
 )
 OUTPUT_DIR: Path = Path("trial2/output")
 
