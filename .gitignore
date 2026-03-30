@@ -11,3 +11,4 @@ md5sum.txt
 *.summary
 Genome/
 Genome_Info/
+._*
