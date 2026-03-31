@@ -165,9 +165,9 @@ pred_df: pl.DataFrame = pl.DataFrame(
     {
         "Gene_Name": test_df["Gene Name"].to_list(),
         "y_true": y_test,
-        "y_prob": y_prob,
         "y_pred": y_pred_final,
-        "is_correct": (y_test == y_pred_final).astype(int),
+        "y_prob": y_prob,
+        "is_correct": (y_test == y_pred_final).astype(bool),
     }
 )
 
@@ -180,7 +180,7 @@ print("SUMMARY")
 print("=" * 60)
 print("Cross-species validation results:")
 print(
-    "Training species: C_albicans, C_dubliniensis, C_tropicalis, C_parapsilosis, C_lusitaniae, C_glabrata"
+    "Training species: C_albicans, C_dubliniensis, C_tropicalis, C_parapsilosis, C_lusitaniae, C_glabrata, S_cerevisiae"
 )
 print("Test species: C_auris")
 print(f"Test AUROC: {auroc:.3f}")

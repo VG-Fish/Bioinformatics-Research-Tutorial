@@ -17,6 +17,7 @@ train_organisms: list[str] = [
     "C_parapsilosis",
     "C_lusitaniae",
     "C_glabrata",
+    "S_cerevisiae",
 ]
 test_organism: str = "C_auris"
 
