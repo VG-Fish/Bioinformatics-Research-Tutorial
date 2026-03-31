@@ -6,6 +6,7 @@ import numpy as np
 import polars as pl
 from joblib import dump
 from sklearn.linear_model import LogisticRegression
+from sklearn.manifold import TSNE
 from sklearn.metrics import (
     accuracy_score,
     classification_report,
@@ -13,6 +14,7 @@ from sklearn.metrics import (
     roc_auc_score,
     roc_curve,
 )
+from sklearn.model_selection import cross_val_score
 
 train_embeddings_path: Path = Path("trial2/datasets/training_embeddings_info.parquet")
 test_embeddings_path: Path = Path("trial2/datasets/test_embeddings_info.parquet")
@@ -39,7 +41,6 @@ print(
     y_train.sum(),
 )
 
-# Load test data
 print("Loading test data...")
 test_df: pl.DataFrame = pl.read_parquet(test_embeddings_path)
 X_test: np.ndarray = np.stack(test_df["Gene Embedding"].to_list())
@@ -53,7 +54,6 @@ print(
     y_test.sum(),
 )
 
-# Train the model
 print("\nTraining logistic regression model...")
 logistic_regression_model: LogisticRegression = LogisticRegression(
     max_iter=1000,
@@ -110,26 +110,26 @@ plt.savefig(roc_path, dpi=150, bbox_inches="tight")
 plt.close()
 print(f"ROC curves saved to: {roc_path}")
 
-thresholds = [0.3, 0.5, 0.7, 0.8]
+thresholds: tuple[float, float, float, float] = (0.3, 0.5, 0.7, 0.8)
 print("\nDetailed evaluation on test set:")
 print("Threshold\tAccuracy\tPrecision\tRecall\tF1")
 print("-" * 50)
 
-best_threshold = 0.5
-best_f1 = 0
+best_threshold: float = 0.5
+best_f1: float = 0
 
 for threshold in thresholds:
-    y_pred = (y_prob >= threshold).astype(int)
+    y_pred: np.ndarray = (y_prob >= threshold).astype(int)
 
-    acc = accuracy_score(y_test, y_pred)
+    acc: float = accuracy_score(y_test, y_pred)
 
-    tp = np.sum((y_pred == 1) & (y_test == 1))
-    fp = np.sum((y_pred == 1) & (y_test == 0))
-    fn = np.sum((y_pred == 0) & (y_test == 1))
+    tp: int = np.sum((y_pred == 1) & (y_test == 1))
+    fp: int = np.sum((y_pred == 1) & (y_test == 0))
+    fn: int = np.sum((y_pred == 0) & (y_test == 1))
 
-    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
-    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
-    f1 = (
+    precision: float = tp / (tp + fp) if (tp + fp) > 0 else 0
+    recall: float = tp / (tp + fn) if (tp + fn) > 0 else 0
+    f1: float = (
         2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
     )
 
@@ -137,15 +137,15 @@ for threshold in thresholds:
         f"{threshold:.1f}\t\t{acc:.3f}\t\t{precision:.3f}\t\t{recall:.3f}\t\t{f1:.3f}"
     )
 
-    if f1 > best_f1:
+    if f1 >= best_f1:
         best_f1 = f1
         best_threshold = threshold
 
 print(f"\nBest threshold based on F1-score: {best_threshold} (F1 = {best_f1:.3f})")
 
-y_pred_final = (y_prob >= best_threshold).astype(int)
-acc_final = accuracy_score(y_test, y_pred_final)
-cm = confusion_matrix(y_test, y_pred_final)
+y_pred_final: np.ndarray = (y_prob >= best_threshold).astype(int)
+acc_final: float = accuracy_score(y_test, y_pred_final)
+cm: np.ndarray = confusion_matrix(y_test, y_pred_final)
 
 print(f"\nFinal Results (threshold = {best_threshold}):")
 print(f"Test Accuracy: {acc_final * 100:.2f}%")
@@ -161,7 +161,7 @@ print(
     )
 )
 
-pred_df = pl.DataFrame(
+pred_df: pl.DataFrame = pl.DataFrame(
     {
         "Gene_Name": test_df["Gene Name"].to_list(),
         "y_true": y_test,
@@ -183,7 +183,29 @@ print(
     "Training species: C_albicans, C_dubliniensis, C_tropicalis, C_parapsilosis, C_lusitaniae, C_glabrata"
 )
 print("Test species: C_auris")
-print("Test AUROC: {auroc:.3f}")
-print("Test Accuracy: {acc_final:.3f}")
-print("Best threshold: {best_threshold}")
+print(f"Test AUROC: {auroc:.3f}")
+print(f"Test Accuracy: {acc_final:.3f}")
+print(f"Best threshold: {best_threshold}")
 print("Model ready for prediction on unlabeled C. auris genes")
+
+cv_scores = cross_val_score(
+    logistic_regression_model, X_train, y_train, cv=5, scoring="roc_auc"
+)
+print(f"Cross-validation AUROC: {cv_scores.mean():.3f} ± {cv_scores.std():.3f}")
+
+embeddings_2d = TSNE(n_components=2).fit_transform(X_test)
+plt.scatter(
+    embeddings_2d[y_test == 0, 0],
+    embeddings_2d[y_test == 0, 1],
+    alpha=0.6,
+    label="Negative",
+)
+plt.scatter(
+    embeddings_2d[y_test == 1, 0],
+    embeddings_2d[y_test == 1, 1],
+    alpha=0.8,
+    label="Positive",
+)
+plt.legend()
+plt.title("Gene Embeddings Visualization")
+plt.savefig(OUTPUT_DIR / "figures" / "gene_embeddings_visualization.png")

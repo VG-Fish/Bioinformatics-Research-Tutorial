@@ -12,7 +12,7 @@ embedding_df: pl.DataFrame = pl.read_parquet(
 OUTPUT_DIR: Path = Path("trial2/output")
 
 phosphomannan_genes_info: list[dict[str, str | float]] = []
-phosphomannan_gene_threshold: float = 0.5
+# phosphomannan_gene_threshold: float = 0.5
 
 for embedding_info in embedding_df.rows(named=True):
     X_new: np.ndarray = np.array(embedding_info["Gene Embedding"]).reshape(1, -1)
