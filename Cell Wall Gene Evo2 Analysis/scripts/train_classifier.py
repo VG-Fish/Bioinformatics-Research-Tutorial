@@ -42,9 +42,36 @@ print(
 )
 
 print("Loading test data...")
-test_df: pl.DataFrame = pl.read_parquet(test_embeddings_path)
+C_auris_embeddings: pl.DataFrame = pl.read_parquet(
+    "trial2/C_auris_embeddings_info.parquet"
+)
+known_genes: tuple = (
+    "B9J08_002229",
+    "B9J08_003091",
+    "B9J08_003123",
+    "B9J08_001483",
+    "B9J08_000139",
+    "B9J08_002246",
+)
+phosphomannan_genes_df: pl.DataFrame = C_auris_embeddings.filter(
+    pl.col("Gene Name").is_in(known_genes),
+)
+num_phosphomannan_genes: int = len(phosphomannan_genes_df["Gene Embedding"])
+
+num_non_phosphomannan_genes: int = int(num_phosphomannan_genes * 5)
+non_phosphomannan_genes_df: pl.DataFrame = C_auris_embeddings.filter(
+    ~pl.col("Gene Name").is_in(known_genes),
+).sample(num_non_phosphomannan_genes)
+
+test_df: pl.DataFrame = pl.concat((phosphomannan_genes_df, non_phosphomannan_genes_df))
+
 X_test: np.ndarray = np.stack(test_df["Gene Embedding"].to_list())
-y_test: np.ndarray = np.array(test_df["Is Phosphomannan Gene"].to_list(), dtype=int)
+y_test: np.ndarray = np.concatenate(
+    (
+        np.ones(num_phosphomannan_genes, dtype=int),
+        np.zeros(num_non_phosphomannan_genes, dtype=int),
+    )
+)
 print(
     "Test data - X shape:",
     X_test.shape,
@@ -56,8 +83,10 @@ print(
 
 print("\nTraining logistic regression model...")
 logistic_regression_model: LogisticRegression = LogisticRegression(
-    max_iter=1000,
+    max_iter=10000,
     class_weight="balanced",
+    C=0.01,
+    solver="saga",
     random_state=42,
 )
 logistic_regression_model.fit(X_train, y_train)
