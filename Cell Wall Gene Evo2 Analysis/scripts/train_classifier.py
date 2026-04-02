@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
 from joblib import dump
+from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
 from sklearn.manifold import TSNE
 from sklearn.metrics import (
@@ -15,6 +16,7 @@ from sklearn.metrics import (
     roc_curve,
 )
 from sklearn.model_selection import cross_val_score
+from sklearn.pipeline import Pipeline
 
 train_embeddings_path: Path = Path("trial2/datasets/training_embeddings_info.parquet")
 test_embeddings_path: Path = Path("trial2/datasets/test_embeddings_info.parquet")
@@ -58,7 +60,7 @@ phosphomannan_genes_df: pl.DataFrame = C_auris_embeddings.filter(
 )
 num_phosphomannan_genes: int = len(phosphomannan_genes_df["Gene Embedding"])
 
-num_non_phosphomannan_genes: int = int(num_phosphomannan_genes * 5)
+num_non_phosphomannan_genes: int = int(num_phosphomannan_genes * 20)
 non_phosphomannan_genes_df: pl.DataFrame = C_auris_embeddings.filter(
     ~pl.col("Gene Name").is_in(known_genes),
 ).sample(num_non_phosphomannan_genes)
@@ -82,26 +84,35 @@ print(
 )
 
 print("\nTraining logistic regression model...")
-logistic_regression_model: LogisticRegression = LogisticRegression(
-    max_iter=10000,
-    class_weight="balanced",
-    C=0.01,
-    solver="saga",
-    random_state=42,
+pipeline = Pipeline(
+    [
+        ("pca", PCA(n_components=100)),
+        (
+            "clf",
+            LogisticRegression(
+                max_iter=5000,
+                class_weight="balanced",
+                C=0.01,
+                l1_ratio=1,
+                solver="saga",
+                random_state=42,
+            ),
+        ),
+    ]
 )
-logistic_regression_model.fit(X_train, y_train)
+pipeline.fit(X_train, y_train)
 
 output_model_path: Path = OUTPUT_DIR / "phosphomannan_logreg.joblib"
-dump(logistic_regression_model, output_model_path)
+dump(pipeline, output_model_path)
 print(f"Model saved to {output_model_path}")
 
 print("\nEvaluating on test set (C. auris)...")
-y_prob: np.ndarray = logistic_regression_model.predict_proba(X_test)[:, 1]
+y_prob: np.ndarray = pipeline.predict_proba(X_test)[:, 1]
 auroc: float = roc_auc_score(y_test, y_prob)  # pyright: ignore[reportAssignmentType]
 print(f"Test AUROC: {auroc:.3f}")
 
 print("Evaluating on training set (other species)...")
-y_train_prob: np.ndarray = logistic_regression_model.predict_proba(X_train)[:, 1]
+y_train_prob: np.ndarray = pipeline.predict_proba(X_train)[:, 1]
 train_auroc: float = roc_auc_score(y_train, y_train_prob)  # pyright: ignore[reportAssignmentType]
 print(f"Training AUROC: {train_auroc:.3f}")
 
@@ -217,9 +228,7 @@ print(f"Test Accuracy: {acc_final:.3f}")
 print(f"Best threshold: {best_threshold}")
 print("Model ready for prediction on unlabeled C. auris genes")
 
-cv_scores = cross_val_score(
-    logistic_regression_model, X_train, y_train, cv=5, scoring="roc_auc"
-)
+cv_scores = cross_val_score(pipeline, X_train, y_train, cv=6, scoring="roc_auc")
 print(f"Cross-validation AUROC: {cv_scores.mean():.3f} ± {cv_scores.std():.3f}")
 
 embeddings_2d = TSNE(n_components=2).fit_transform(X_test)
