@@ -86,7 +86,7 @@ print(
 print("\nTraining logistic regression model...")
 pipeline = Pipeline(
     [
-        ("pca", PCA(n_components=100)),
+        ("pca", PCA(n_components=200)),
         (
             "clf",
             LogisticRegression(
